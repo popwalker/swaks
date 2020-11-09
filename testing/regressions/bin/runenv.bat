@@ -1,7 +1,7 @@
 
 @echo off
 
-set PATH=C:\Strawberry\perl\bin;%PATH%
+set PATH=C:\Strawberry\perl\bin;bin;%PATH%
 copy ..\..\swaks var\swaks.pl >NUL
 set TEST_SWAKS=var\swaks.pl
 set PERL5LIB=lib\authen-ntlm-local

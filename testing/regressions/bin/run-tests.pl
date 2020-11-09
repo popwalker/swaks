@@ -391,6 +391,7 @@ sub runAction {
 			elsif ($part =~ /^string:(.*)$/) {
 				my $string = $1;
 				$string =~ s/\\n/\n/g;
+				# $string =~ s/\\r/\r/g;
 				#print "adding string $string to $outFile\n";
 				print O $string;
 			}
@@ -558,21 +559,37 @@ sub readTestFile {
 					map { push(@{$obj->{'test result'}}, "COMPARE_FILE " . catfile('%REFDIR%', $_) .' ' . catfile('%OUTDIR%', $_)); } (@filesSorted);
 				}
 				elsif ($type eq 'INTERACT') {
-					if ($^O eq 'MSWin32') {
-						$obj->{'skip'} ||= "INTERACTive testing not currently supported on windows";
-					}
+					# if ($^O eq 'MSWin32') {
+					# 	$obj->{'skip'} ||= "INTERACTive testing not currently supported on windows";
+					# }
 					my $file     = catfile('%OUTDIR%', '%TESTID%.expect');
 					push(@{$obj->{'pre action'}}, "REMOVE_FILE $file");
 
 					my $cmd       = shift(@files);
-					my $expectStr = "MERGE $file string:'spawn $cmd\\n' ";
-					while (scalar(@files)) {
-						my $expect   = shift(@files);
-						my $response = shift(@files);
-						$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
-					}
-					$expectStr .= "string:'interact\\n'";
+					my $expectStr;
 
+					if ($^O eq 'MSWin32') {
+						my @args   = mshellwords($cmd);
+						unshift(@args, "perl");
+						my $cmdStr = join(', ', map { "[[$_]]" } (@args));
+						$expectStr = "MERGE $file string:'if spawn($cmdStr) then\\n' ";
+						while (scalar(@files)) {
+							my $expect   = shift(@files);
+							my $response = shift(@files);
+							$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\\r\")\\n' ";
+						}
+						$expectStr .= "string:'end\\n'";
+					}
+					else {
+						$expectStr = "MERGE $file string:'spawn $cmd\\n' ";
+						while (scalar(@files)) {
+							my $expect   = shift(@files);
+							my $response = shift(@files);
+							$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
+						}
+						$expectStr .= "string:'interact\\n'";
+					}
+print STDERR "expect file: $file\n";
 					push(@{$obj->{'pre action'}}, $expectStr);
 					unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
 				}
