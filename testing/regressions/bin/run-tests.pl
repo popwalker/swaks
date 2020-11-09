@@ -391,6 +391,7 @@ sub runAction {
 			elsif ($part =~ /^string:(.*)$/) {
 				my $string = $1;
 				$string =~ s/\\n/\n/g;
+				# $string =~ s/\\r/\r/g;
 				#print "adding string $string to $outFile\n";
 				print O $string;
 			}
@@ -558,23 +559,33 @@ sub readTestFile {
 					map { push(@{$obj->{'test result'}}, "COMPARE_FILE " . catfile('%REFDIR%', $_) .' ' . catfile('%OUTDIR%', $_)); } (@filesSorted);
 				}
 				elsif ($type eq 'INTERACT') {
-					if ($^O eq 'MSWin32') {
-						$obj->{'skip'} ||= "INTERACTive testing not currently supported on windows";
-					}
 					my $file     = catfile('%OUTDIR%', '%TESTID%.expect');
 					push(@{$obj->{'pre action'}}, "REMOVE_FILE $file");
 
 					my $cmd       = shift(@files);
-					my $expectStr = "MERGE $file string:'spawn $cmd\\n' ";
+					my $expectStr;
+
+					# this uses our homegrown pure-perl, works-in-windows expect
+					my $cmdStr = "CMD " . catfile($Bin, 'pexpect.pl') . " --command \"perl $cmd\""
+					           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
+					           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stderr');
 					while (scalar(@files)) {
 						my $expect   = shift(@files);
 						my $response = shift(@files);
-						$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
+						$cmdStr .= " --expect \"$expect\" --send \"$response\"";
 					}
-					$expectStr .= "string:'interact\\n'";
+					unshift(@{$obj->{'test action'}}, $cmdStr);
 
-					push(@{$obj->{'pre action'}}, $expectStr);
-					unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
+					# this is the nix-only expect version.  Saving it in case it's interesting again some day
+					# $expectStr = "MERGE $file string:'spawn $cmd\\n' ";
+					# while (scalar(@files)) {
+					# 	my $expect   = shift(@files);
+					# 	my $response = shift(@files);
+					# 	$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
+					# }
+					# $expectStr .= "string:'interact\\n'";
+					# push(@{$obj->{'pre action'}}, $expectStr);
+					# unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
 				}
 				else {
 					die "unknown 'auto' type $type\n";
