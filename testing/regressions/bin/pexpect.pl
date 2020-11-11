@@ -9,6 +9,8 @@ my $foo =<<'EOM';
   --command   "../../../swaks --to FOO -au user --dump AUTH" \
   --expect "Password:" \
   --send "TPASS"
+
+pexpect.pl --outfile out.file --errfile err.file --command   "..\..\..\swaks.pl --to FOO -au user --dump AUTH" --expect "Password:" --send "TPASS"
 EOM
 
 use Data::Dumper;
