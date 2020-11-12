@@ -10,7 +10,7 @@ my $foo =<<'EOM';
   --expect "Password:" \
   --send "TPASS"
 
-pexpect.pl --outfile out.file --errfile err.file --command   "..\..\..\swaks.pl --to FOO -au user --dump AUTH" --expect "Password:" --send "TPASS"
+pexpect2.pl --outfile out.file --errfile err.file --command   "..\..\..\swaks.pl --to FOO -au user --dump AUTH" --expect "Password:" --send "TPASS"
 EOM
 
 use Data::Dumper;
@@ -45,9 +45,11 @@ open(OUT, ">$opts->{outfile}");
 open(ERR, ">$opts->{errfile}");
 
 my @cmd = split(' ', $opts->{command}); # this is not correct in the long run
+my @cmd = ('C:\\Strawberry\\perl\\bin\\perl.exe', '..\\..\\..\\swaks.pl', '--to', 'FOO', '-au', 'user', '--dump', 'AUTH');
 my($in, $out, $err);
+my $run;
 eval {
-	my $run = start \@cmd, \$in, \$out, \$err, timer(1);
+	$run = start \@cmd, \$in, \$out, \$err, timer(1);
 
 	my $wait  = 10; # seconds max
 	my $start = time();
@@ -69,7 +71,15 @@ eval {
 			$run->pump();
 		}
 	}
+	# $run->finish();
 };
+
+if ($run) {
+	$run->finish();
+}
+
+close(OUT);
+close(ERR);
 
 exit;
 

@@ -576,9 +576,12 @@ sub readTestFile {
 						while (scalar(@files)) {
 							my $expect   = shift(@files);
 							my $response = shift(@files);
-							$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\\r\")\\n' ";
+							$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\")\\n' ";
 						}
 						$expectStr .= "string:'end\\n'";
+print STDERR "expect file: $file\n";
+						push(@{$obj->{'pre action'}}, $expectStr);
+						unshift(@{$obj->{'test action'}}, "CMD_CAPTURE C:\\Users\\Administrator\\Go\\bin\\expect $file");
 					}
 					else {
 						$expectStr = "MERGE $file string:'spawn $cmd\\n' ";
@@ -588,10 +591,9 @@ sub readTestFile {
 							$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
 						}
 						$expectStr .= "string:'interact\\n'";
+						push(@{$obj->{'pre action'}}, $expectStr);
+						unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
 					}
-print STDERR "expect file: $file\n";
-					push(@{$obj->{'pre action'}}, $expectStr);
-					unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
 				}
 				else {
 					die "unknown 'auto' type $type\n";

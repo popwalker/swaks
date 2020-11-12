@@ -71,7 +71,7 @@ $select->add($chld_err);
 my $wait  = 10; # seconds max
 my $start = time();
 print "starting loop\n";
-while(my @ready = $select->can_read(1)) {
+while(my @ready = $select->can_read()) {
 	print STDERR "read (select)\n";
 	foreach my $fh (@ready) {
 		print STDERR "read (fh)\n";
