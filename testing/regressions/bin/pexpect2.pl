@@ -59,13 +59,14 @@ eval {
 		if (!length($out) && !length($err)) {
 			$run->pump();
 		}
+		$out =~ s%(^|[^\r])\n%$1\r\n%g;
 		print OUT $out;
 		print ERR $err;
 		$in = '';
 		foreach my $expect (keys(%strings)) {
 			if ($out =~ /$expect/) {
 				$in .= "$strings{$expect}\n";
-				print OUT "$strings{$expect}\n";
+				print OUT "$strings{$expect}\r\n";
 			}
 		}
 		$out = $err = '';
