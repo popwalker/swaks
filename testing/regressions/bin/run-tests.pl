@@ -568,44 +568,27 @@ sub readTestFile {
 					my $cmd       = shift(@files);
 					my $expectStr;
 
-					if ($^O eq 'MSWin32') {
-						my $cmdStr = "CMD pexpect2.pl --command \"perl $cmd\""
-						           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
-						           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stderr');
-						while (scalar(@files)) {
-							my $expect   = shift(@files);
-							my $response = shift(@files);
-							$cmdStr .= " --expect \"$expect\" --send \"$response\"";
-						}
-						unshift(@{$obj->{'test action'}}, $cmdStr);
-
-
-
-
-						# my @args   = mshellwords($cmd);
-						# unshift(@args, "perl");
-						# my $cmdStr = join(', ', map { "[[$_]]" } (@args));
-						# $expectStr = "MERGE $file string:'if spawn($cmdStr) then\\n' ";
-						# while (scalar(@files)) {
-						# 	my $expect   = shift(@files);
-						# 	my $response = shift(@files);
-						# 	$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\")\\n' ";
-						# }
-						# $expectStr .= "string:'end\\n'";
-						# push(@{$obj->{'pre action'}}, $expectStr);
-						# unshift(@{$obj->{'test action'}}, "CMD_CAPTURE C:\\Users\\Administrator\\Go\\bin\\expect $file");
+					# this uses our homegrown pure-perl, works-in-windows expect
+					my $cmdStr = "CMD " . catfile($Bin, 'pexpect2.pl') . " --command \"perl $cmd\""
+					           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
+					           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stderr');
+					while (scalar(@files)) {
+						my $expect   = shift(@files);
+						my $response = shift(@files);
+						$cmdStr .= " --expect \"$expect\" --send \"$response\"";
 					}
-					else {
-						$expectStr = "MERGE $file string:'spawn $cmd\\n' ";
-						while (scalar(@files)) {
-							my $expect   = shift(@files);
-							my $response = shift(@files);
-							$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
-						}
-						$expectStr .= "string:'interact\\n'";
-						push(@{$obj->{'pre action'}}, $expectStr);
-						unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
-					}
+					unshift(@{$obj->{'test action'}}, $cmdStr);
+
+					# this is the nix-only expect version.  Saving it in case it's interesting again some day
+					# $expectStr = "MERGE $file string:'spawn $cmd\\n' ";
+					# while (scalar(@files)) {
+					# 	my $expect   = shift(@files);
+					# 	my $response = shift(@files);
+					# 	$expectStr  .= "string:'expect \"$expect\"\\n' string:'send -- \"$response\\r\"\\n' ";
+					# }
+					# $expectStr .= "string:'interact\\n'";
+					# push(@{$obj->{'pre action'}}, $expectStr);
+					# unshift(@{$obj->{'test action'}}, "CMD_CAPTURE expect $file");
 				}
 				else {
 					die "unknown 'auto' type $type\n";
