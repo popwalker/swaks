@@ -569,19 +569,32 @@ sub readTestFile {
 					my $expectStr;
 
 					if ($^O eq 'MSWin32') {
-						my @args   = mshellwords($cmd);
-						unshift(@args, "perl");
-						my $cmdStr = join(', ', map { "[[$_]]" } (@args));
-						$expectStr = "MERGE $file string:'if spawn($cmdStr) then\\n' ";
+						my $cmdStr = "CMD pexpect2.pl --command 'perl $cmd'"
+						           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
+						           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stdout');
 						while (scalar(@files)) {
 							my $expect   = shift(@files);
 							my $response = shift(@files);
-							$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\")\\n' ";
+							$cmdStr .= " --expect '$expect' --send '$response'";
 						}
-						$expectStr .= "string:'end\\n'";
-print STDERR "expect file: $file\n";
-						push(@{$obj->{'pre action'}}, $expectStr);
-						unshift(@{$obj->{'test action'}}, "CMD_CAPTURE C:\\Users\\Administrator\\Go\\bin\\expect $file");
+						unshift(@{$obj->{'test action'}}, $cmdStr);
+print "generated $cmdStr\n";
+
+
+
+
+						# my @args   = mshellwords($cmd);
+						# unshift(@args, "perl");
+						# my $cmdStr = join(', ', map { "[[$_]]" } (@args));
+						# $expectStr = "MERGE $file string:'if spawn($cmdStr) then\\n' ";
+						# while (scalar(@files)) {
+						# 	my $expect   = shift(@files);
+						# 	my $response = shift(@files);
+						# 	$expectStr  .= "string:'    expect(\"$expect\")\\n' string:'    sendln(\"$response\")\\n' ";
+						# }
+						# $expectStr .= "string:'end\\n'";
+						# push(@{$obj->{'pre action'}}, $expectStr);
+						# unshift(@{$obj->{'test action'}}, "CMD_CAPTURE C:\\Users\\Administrator\\Go\\bin\\expect $file");
 					}
 					else {
 						$expectStr = "MERGE $file string:'spawn $cmd\\n' ";

@@ -15,8 +15,8 @@ EOM
 
 use Data::Dumper;
 use Getopt::Long;
-# use IO::Select;
 use IPC::Run qw(start timer);
+use Text::ParseWords;
 
 my $opts = {};
 GetOptions($opts, 'command=s', 'outfile=s', 'errfile=s', 'expect=s@', 'send=s@') || die "Couldn't understand options\n";
@@ -41,13 +41,13 @@ foreach my $expect (@expect) {
 	$strings{$expect} = shift(@send);
 }
 
-open(OUT, ">$opts->{outfile}");
-open(ERR, ">$opts->{errfile}");
+open(OUT, ">$opts->{outfile}") || die "Couldn't open $opts->{outfile} to save command stdout: $!\n";
+open(ERR, ">$opts->{errfile}") || die "Couldn't open $opts->{errfile} to save command stderr: $!\n";
 
-my @cmd = split(' ', $opts->{command}); # this is not correct in the long run
-my @cmd = ('C:\\Strawberry\\perl\\bin\\perl.exe', '..\\..\\..\\swaks.pl', '--to', 'FOO', '-au', 'user', '--dump', 'AUTH');
-my($in, $out, $err);
-my $run;
+# my @cmd = split(' ', $opts->{command}); # this is not correct in the long run
+# my @cmd = ('C:\\Strawberry\\perl\\bin\\perl.exe', '..\\..\\..\\swaks.pl', '--to', 'FOO', '-au', 'user', '--dump', 'AUTH');
+my @cmd = mshellwords($opts->{command});
+my($in, $out, $err, $run);
 eval {
 	$run = start \@cmd, \$in, \$out, \$err, timer(1);
 
@@ -71,7 +71,6 @@ eval {
 			$run->pump();
 		}
 	}
-	# $run->finish();
 };
 
 if ($run) {
@@ -83,53 +82,22 @@ close(ERR);
 
 exit;
 
+sub mshellwords {
+	my $line = shift;
+	my @return = ();
 
-
-
-
-my $bar =<<'EOM';
-
-
-# my $pid = open3(my $chld_in, my $chld_out, my $chld_err = gensym,
-#                 'some', 'cmd', 'and', 'args');
-# # or pass the command through the shell
-$pid = open3(my $chld_in, my $chld_out, my $chld_err = gensym, $opts->{command});
-binmode($chld_out);
-binmode($chld_err);
-select((select($chld_in), $| = 1)[0]);
-
-
-my $select = IO::Select->new();
-$select->add($chld_out);
-$select->add($chld_err);
-
-my $wait  = 10; # seconds max
-my $start = time();
-print "starting loop\n";
-while(my @ready = $select->can_read(1)) {
-	print STDERR "read (select)\n";
-	foreach my $fh (@ready) {
-		print STDERR "read (fh)\n";
-		# 10000 is kind of random.  Would be nice to read it all in one bite.  Might have to revisit and take multiple bites
-		my $buff = '';
-		my $ret  = sysread($fh, $buff, 10000);
-		if ($fh == $chld_err) {
-			print ERR $buff;
-		}
-		else {
-			foreach my $expect (keys(%strings)) {
-				if ($buff =~ /$expect/) {
-					print $chld_in "$strings{$expect}\n";
-				}
-			}
-			print OUT $buff;
+	if ($^O eq 'MSWin32') {
+		$line =~ s/\\/::BACKSLASH::/g;
+		foreach my $part (shellwords($line)) {
+			$part =~ s/::BACKSLASH::/\\/g;
+			push(@return, $part);
 		}
 	}
-	last if (time() > $start + $wait);
+	else {
+		@return = shellwords($line);
+	}
+
+	map { s/\%QUOTE_DOUBLE\%/"/g; s/\%QUOTE_SINGLE\%/'/g; } (@return);
+
+	return @return;
 }
-
-waitpid( $pid, 0 );
-
-close(OUT);
-close(ERR);
-EOM
