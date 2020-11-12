@@ -569,16 +569,15 @@ sub readTestFile {
 					my $expectStr;
 
 					if ($^O eq 'MSWin32') {
-						my $cmdStr = "CMD pexpect2.pl --command 'perl $cmd'"
+						my $cmdStr = "CMD pexpect2.pl --command \"perl $cmd\""
 						           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
-						           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stdout');
+						           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stderr');
 						while (scalar(@files)) {
 							my $expect   = shift(@files);
 							my $response = shift(@files);
-							$cmdStr .= " --expect '$expect' --send '$response'";
+							$cmdStr .= " --expect \"$expect\" --send \"$response\"";
 						}
 						unshift(@{$obj->{'test action'}}, $cmdStr);
-print "generated $cmdStr\n";
 
 
 
