@@ -44,6 +44,7 @@ my @cmd = mshellwords($opts->{command});
 my($in, $out, $err, $run);
 eval {
 	$run = start \@cmd, \$in, \$out, \$err, timer(1);
+	print OUT "spawn ", join(' ', @cmd), "\r\n";
 
 	my $wait  = 10; # seconds max
 	my $start = time();
