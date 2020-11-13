@@ -54,9 +54,13 @@ eval {
 		}
 
 		# We make sure the output uses \r\n because that's what expect did, and it matches what is happening on windows anyway
-		$out =~ s%(^|[^\r])\n%$1\r\n%g;
+		# annoyingly, it looks like expect changed \n into \r\n unconditionally, so we need to do the same thing, even though
+		# the data section of our output will have \r\r\n line endings
+		# $out =~ s%(^|[^\r])\n%$1\r\n%g;
+		$out =~ s%\n%\r\n%g;
 		print OUT $out;
-		$err =~ s%(^|[^\r])\n%$1\r\n%g;
+		# $err =~ s%(^|[^\r])\n%$1\r\n%g;
+		$err =~ s%\n%\r\n%g;
 		print ERR $err;
 		$in = '';
 		foreach my $expect (keys(%strings)) {
