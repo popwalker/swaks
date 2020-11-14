@@ -41,10 +41,12 @@ binmode(OUT);
 binmode(ERR);
 
 my @cmd = mshellwords($opts->{command});
+unshift(@cmd, 'C:\\Strawberry\\perl\\bin\\perl.exe');
 my($in, $out, $err, $run);
 eval {
 	$run = start \@cmd, \$in, \$out, \$err, timer(1);
-	print OUT "spawn ", join(' ', @cmd), "\r\n";
+	# print OUT "spawn ", join(' ', @cmd), "\r\n";
+	# print "spawn ", join(' ', @cmd), "\r\n";
 
 	my $wait  = 10; # seconds max
 	my $start = time();
@@ -53,8 +55,8 @@ eval {
 			$run->pump();
 		}
 
-		# We make sure the output uses \r\n because that's what expect did, and it matches what is happening on windows anyway
-		# annoyingly, it looks like expect changed \n into \r\n unconditionally, so we need to do the same thing, even though
+		# We make sure the output uses \r\n because that's what expect did, and it matches what is happening on windows anyway.
+		# Annoyingly, it looks like expect changed \n into \r\n unconditionally, so we need to do the same thing, even though
 		# the data section of our output will have \r\r\n line endings
 		# $out =~ s%(^|[^\r])\n%$1\r\n%g;
 		$out =~ s%\n%\r\n%g;
@@ -75,6 +77,11 @@ eval {
 		}
 	}
 };
+
+if ($@) {
+	print STDERR "Unable to open pipe: $@\n";
+	$run->kill_kill() if ($run);
+}
 
 if ($run) {
 	$run->finish();
