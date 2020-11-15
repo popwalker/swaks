@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use File::Spec::Functions qw(:ALL);
 use Text::Diff qw();
 
 # two ways to call this - the first is with two files and the second is with a dir and a testid.  Do our best to tell which is which
@@ -9,18 +10,14 @@ use Text::Diff qw();
 
 my $testDir  = shift;
 my $testFile = shift;
-my $file1;
-my $file2;
+my $file1    = catfile($testDir, "out-ref", $testFile);
+my $file2    = catfile($testDir, "out-dyn", $testFile);
 
 if (-f $testDir && -f $testId) {
 	$file1 = $testDir;
 	$file2 = $testId;
 }
-elsif (-f "$testDir/out-ref/$testFile" && "$testDir/out-dyn/$testFile") {
-	$file1 = "$testDir/out-ref/$testFile";
-	$file2 = "$testDir/out-dyn/$testFile";
-}
-else {
+elsif (!-f $file1 || !-f $file2) {
 	die "Couldn't figure out what files to diff from the options\n";
 }
 
