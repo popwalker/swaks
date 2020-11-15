@@ -15,7 +15,7 @@ EOM
 
 use Data::Dumper;
 use Getopt::Long;
-use IPC::Run qw(start timer);
+use IPC::Run qw(start timer binary);
 use Text::ParseWords;
 
 my $opts = {};
@@ -51,17 +51,21 @@ binmode(ERR);
 my @cmd = mshellwords($opts->{command});
 my($in, $out, $err, $run);
 eval {
-	$run = start \@cmd, \$in, \$out, \$err, timer(1);
+	$run = start \@cmd, \$in, ">", binary 1, \$out, ">>", binary 1, \$err, timer(1);
 	shift(@cmd) if ($cmd[0] eq 'perl');
     print OUT "spawn ", join(' ', @cmd), "\r\n";
 
 	my $wait  = 10; # seconds max
 	my $start = time();
+print STDOUT "HERE!\n";
 	while (time() < $start + $wait) {
 		if (!length($out) && !length($err)) {
+print STDOUT "HERE 1!\n";
 			$run->pump();
+print STDOUT "HERE 2!\n";
 		}
 		$out =~ s%(^|[^\r])\n%$1\r\n%g;
+print STDOUT $out;
 		print OUT $out;
 		print ERR $err;
 		$in = '';
