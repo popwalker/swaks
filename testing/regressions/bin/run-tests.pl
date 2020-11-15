@@ -569,7 +569,7 @@ sub readTestFile {
 					my $expectStr;
 
 					# this uses our homegrown pure-perl, works-in-windows expect
-					my $cmdStr = "CMD " . catfile($Bin, 'pexpect2.pl') . " --command \"perl $cmd\""
+					my $cmdStr = "CMD " . catfile($Bin, 'pexpect4.pl') . " --command \"perl $cmd\""
 					           . " --outfile " . catfile('%OUTDIR%', '%TESTID%.stdout')
 					           . " --errfile " . catfile('%OUTDIR%', '%TESTID%.stderr');
 					while (scalar(@files)) {
