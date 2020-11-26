@@ -179,6 +179,46 @@ sub saveResult {
 	}
 }
 
+sub genDiffs {
+	my $baseDiffFile = shift;
+	my $refFile      = shift;
+	my $dynFile      = shift;
+	my $leDiffFile   = $baseDiffFile . '.showle';
+	my $noleDiffFile = $baseDiffFile . '.nole';
+
+	unlink($baseDiffFile, $leDiffFile, $noleDiffFile);
+
+	my $diff = Text::Diff::diff($refFile, $dynFile, { STYLE => 'Unified' });
+
+	if (!$diff) {
+		return;
+	}
+
+	open(O, ">$baseDiffFile") || die "Can't write to $baseDiffFile: $!\n";
+	print O $diff;
+	close(O);
+
+	$diff =~ s|\r|\\r|g;
+	$diff =~ s|\n|\\n\n|g;
+	open(O, ">$leDiffFile") || die "Can't write to $leDiffFile: $!\n";
+	print O $diff;
+	close(O);
+
+	open(I, "<$refFile");
+	my $refData = join('', <I>);
+	close(I);
+	open(I, "<$dynFile");
+	my $dynData = join('', <I>);
+	close(I);
+
+	$refData =~ s|\r||g;
+	$dynData =~ s|\r||g;
+
+	open(O, ">$noleDiffFile") || die "Can't write to $noleDiffFile: $!\n";
+	print O Text::Diff::diff(\$refData, \$dynData, { STYLE => 'Unified' });
+	close(O);
+}
+
 
 sub runResult {
 	my $testObj = shift;
@@ -198,14 +238,9 @@ sub runResult {
 			if (-f $args[0] && -f $args[1]) {
 				my $diffFile     = catfile($tokens->{'%OUTDIR%'}, (splitpath($args[0]))[2] . '.diff');
 				unlink($diffFile);
+				genDiffs($diffFile, $args[0], $args[1]);
 
-				my $diff = Text::Diff::diff($args[0], $args[1], { STYLE => 'Unified' });
-				if ($diff) {
-					# my $diffFile = $tokens->{'%OUTDIR%'} . '/' . $tokens->{'%TESTID%'} . '.diff';
-					open(O, ">$diffFile") || die "Can't write to $diffFile: $!\n";
-					print O $diff;
-					close(O);
-
+				if (-e $diffFile) {
 					if (!$opts->{'headless'}) {
 						INTERACT:
 						while (1) {
@@ -213,7 +248,7 @@ sub runResult {
 							      "DIFF:   $args[0], $args[1]\n",
 							      ($testObj->{title} ? "TITLE:  $testObj->{title}\n" : ''),
 							      "ACTION: ", $testObj->{'test action'}[0], "\n",
-							      "(i)gnore file, review (d)iff (with (l)ine endings), (e)dit test, (r)erun test, (s)kip test, (a)ccept new results, (q)uit: ";
+							      "(i)gnore file, review (d)iff ((w)ith or with(o)ut line endings), (e)dit test, (r)erun test, (s)kip test, (a)ccept new results, (q)uit: ";
 
 							# read a single character w/o requiring user to hit enter
 							ReadMode 'cbreak';
@@ -225,21 +260,10 @@ sub runResult {
 								# ignore is to ignore this specific file failure
 								last INTERACT;
 							}
-							elsif ($input eq 'd' || $input eq 'l') {
+							elsif ($input eq 'd' || $input eq 'w' || $input eq 'o') {
 								my $showFile = $diffFile;
-								if ($input eq 'l') {
-									$showFile = "$diffFile.lineendings";
-									open(I, $diffFile) || print "ERROR: unable to open $diffFile: $!\n";
-									my $contents = join('', <I>);
-									close(I);
-
-									$contents =~ s|\r|\\r|g;
-									$contents =~ s|\n|\\n\n|g;
-
-									open(O, ">$showFile") || print "ERROR: unable to open $showFile: $!\n";
-									print O $contents;
-									close(O);
-								}
+								$showFile = "$diffFile.showle" if ($input eq 'w');
+								$showFile = "$diffFile.nole" if ($input eq 'o');
 
 								my @cmds = ('intcat');
 								if (length($ENV{'PAGER'})) {
