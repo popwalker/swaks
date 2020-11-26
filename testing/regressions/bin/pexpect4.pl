@@ -1,7 +1,9 @@
 #!/usr/bin/env perl
 
 use strict;
-use open "IN" => ":raw", "OUT" => ":raw";
+BEGIN {
+use open "IN" => ":perlio", "OUT" => ":perlio";
+};
 
 my $foo =<<'EOM';
 ./pexpect.pl \
@@ -44,8 +46,8 @@ foreach my $expect (@expect) {
 
 open(OUT, ">$opts->{outfile}") || die "Couldn't open $opts->{outfile} to save command stdout: $!\n";
 open(ERR, ">$opts->{errfile}") || die "Couldn't open $opts->{errfile} to save command stderr: $!\n";
-# binmode(OUT);
-# binmode(ERR);
+binmode(OUT);
+binmode(ERR);
 
 # my @cmd = split(' ', $opts->{command}); # this is not correct in the long run
 # my @cmd = ('C:\\Strawberry\\perl\\bin\\perl.exe', '..\\..\\..\\swaks.pl', '--to', 'FOO', '-au', 'user', '--dump', 'AUTH');

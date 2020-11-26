@@ -10,6 +10,7 @@
 #  - TEST_SWAKS=../../swaks bin/run-tests.pl --errors --infile var/results.1570707905 _options-data
 
 use strict;
+use open "IN" => ":raw", "OUT" => ":raw";
 use Capture::Tiny;
 use File::Copy qw();
 use File::Spec::Functions qw(:ALL);
