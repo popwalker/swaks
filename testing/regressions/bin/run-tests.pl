@@ -213,7 +213,7 @@ sub runResult {
 							      "DIFF:   $args[0], $args[1]\n",
 							      ($testObj->{title} ? "TITLE:  $testObj->{title}\n" : ''),
 							      "ACTION: ", $testObj->{'test action'}[0], "\n",
-							      "(i)gnore, review (d)iff, (e)dit test, (r)erun test, (s)kip test, (a)ccept new results, (q)uit: ";
+							      "(i)gnore file, review (d)iff (with (l)ine endings), (e)dit test, (r)erun test, (s)kip test, (a)ccept new results, (q)uit: ";
 
 							# read a single character w/o requiring user to hit enter
 							ReadMode 'cbreak';
@@ -225,7 +225,22 @@ sub runResult {
 								# ignore is to ignore this specific file failure
 								last INTERACT;
 							}
-							elsif ($input eq 'd') {
+							elsif ($input eq 'd' || $input eq 'l') {
+								my $showFile = $diffFile;
+								if ($input eq 'l') {
+									$showFile = "$diffFile.lineendings";
+									open(I, $diffFile) || print "ERROR: unable to open $diffFile: $!\n";
+									my $contents = join('', <I>);
+									close(I);
+
+									$contents =~ s|\r|\\r|g;
+									$contents =~ s|\n|\\n\n|g;
+
+									open(O, ">$showFile") || print "ERROR: unable to open $showFile: $!\n";
+									print O $contents;
+									close(O);
+								}
+
 								my @cmds = ('intcat');
 								if (length($ENV{'PAGER'})) {
 									unshift(@cmds, $ENV{'PAGER'});
@@ -237,16 +252,16 @@ sub runResult {
 								CMD:
 								foreach my $cmd (@cmds) {
 									if ($cmd eq 'intcat') {
-										open(I, $diffFile) || print "ERROR: unable to open $diffFile: $!\n";
+										open(I, $showFile) || print "ERROR: unable to open $showFile: $!\n";
 										while (<I>) {
 											print;
 										}
 										close(I);
 									}
 									else {
-										debug('exec', "$cmd $diffFile");
-										if (system($cmd, $diffFile) == -1) {
-											print "ERROR: unable to execute '$cmd $diffFile': $!\n";
+										debug('exec', "$cmd $showFile");
+										if (system($cmd, $showFile) == -1) {
+											print "ERROR: unable to execute '$cmd $showFile': $!\n";
 											next CMD;
 										}
 										last CMD;
