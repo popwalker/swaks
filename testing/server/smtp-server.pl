@@ -23,18 +23,28 @@ use Net::SSLeay;
 use FindBin qw($Bin);
 
 my %opt     = ();
-GetOptions(\%opt, 'port|p=s', 'interface|i=s', 'domain|d=s', 'silent|s!') || mexit(1);
+GetOptions(\%opt, 'port|p=s', 'interface|i=s', 'domain|d=s', 'silent|s!', 'include=s@') || mexit(1);
 # p - port
 # i - interface (or socket file for unix domain)
 # d - domain (inet or unix or pipe)
 # s - silent (don't print transaction hints)
+# include files - if specified even once, no command line file will be checked.  If multiple, will be executed in order specified
 
-my $scriptFile = shift;
-if (!$scriptFile) {
-  $scriptFile = $Bin . '/scripts/basic-successful-email.txt';
+my @scriptFiles = ();
+if (exists($opt{include}) && ref($opt{include}) eq 'ARRAY') {
+  @scriptFiles = @{$opt{include}};
 }
-if (!-f $scriptFile) {
-  mexit(1, "script file $scriptFile does not exist\n");
+elsif (scalar(@ARGV)) {
+  @scriptFiles = @ARGV;
+}
+else {
+  @scriptFiles = ($Bin . '/scripts/basic-successful-email.txt');
+}
+
+foreach my $file (@scriptFiles) {
+  if (!-f $file) {
+    mexit(1, "script file $file does not exist\n");
+  }
 }
 
 my $domain  = lc($opt{domain}) || 'inet';
@@ -51,13 +61,15 @@ select((select(L), $| = 1)[0]);
 
 get_cxn(set_up_cxn($domain, $lint));
 
-handle_script_file($scriptFile);
+foreach my $scriptFile (@scriptFiles) {
+  handle_script_file($scriptFile);
+}
 
 exit;
 
 sub handle_script_file {
   my $f = shift;
-  print "Run script file $f\n";
+  print "Run script file $f\n" if (!$opt{silent});
   open(my $fh, "<$f") || die "Can't open $f: $!\n";
   while (defined(my $l = <$fh>)) {
     if ($l =~ /^include\(['"](?:\$Bin\/)?(.*)['"]\);/) {
