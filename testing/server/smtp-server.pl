@@ -18,12 +18,12 @@
 
 use strict;
 use IO::Socket;
-use Getopt::Std;
+use Getopt::Long;
 use Net::SSLeay;
 use FindBin qw($Bin);
 
 my %opt     = ();
-getopts('t:p:i:d:f:s', \%opt) || mexit(1);
+GetOptions(\%opt, 'port|p=s', 'interface|i=s', 'domain|d=s', 'silent|s!') || mexit(1);
 # p - port
 # i - interface (or socket file for unix domain)
 # d - domain (inet or unix or pipe)
@@ -37,12 +37,12 @@ if (!-f $scriptFile) {
   mexit(1, "script file $scriptFile does not exist\n");
 }
 
-my $domain  = lc($opt{d}) || 'inet';
+my $domain  = lc($opt{domain}) || 'inet';
 if ($domain !~ /^(unix|inet|pipe)$/) {
   mexit(1, "unknown domain $domain\n");
 }
-my $port    = $opt{p} || 11111;
-my $lint    = $domain eq 'unix' ? $opt{i} || "/tmp/server.$>.$$" : $opt{i} || '0.0.0.0';
+my $port    = $opt{port} || 11111;
+my $lint    = $domain eq 'unix' ? $opt{interface} || "/tmp/server.$>.$$" : $opt{interface} || '0.0.0.0';
 $lint      .= ":$port" if ($domain eq 'inet' && $lint !~ /:/);
 my %cxn     = ();
 
@@ -123,7 +123,7 @@ sub mexit {
 
 sub send_line {
   my $l = shift;
-  print L "> $l\n" if (!$opt{s});
+  print L "> $l\n" if (!$opt{silent});
   $l =~ s/([^\r])\n/$1\r\n/;
 
   if ($cxn{tls}{active}) {
@@ -150,7 +150,7 @@ sub get_line {
       $l = <$s>;
     }
     $l =~ s/\r//g;
-    print L "< $l" if (!$opt{s});
+    print L "< $l" if (!$opt{silent});
     $r .= $l;
   } while ($e && $l && $l !~ /$e/ms);
 
@@ -178,6 +178,6 @@ sub start_tls {
     Net::SSLeay::set_fd($cxn{tls}{ssl}, fileno($cxn{cxn}));
   }
   my $err = Net::SSLeay::accept($cxn{tls}{ssl}) ;
-  print L "* Cipher '", Net::SSLeay::get_cipher($cxn{tls}{ssl}), "'\n" if (!$opt{s});
+  print L "* Cipher '", Net::SSLeay::get_cipher($cxn{tls}{ssl}), "'\n" if (!$opt{silent});
   $cxn{tls}{active} = 1;
 }
