@@ -23,7 +23,7 @@ use Net::SSLeay;
 use FindBin qw($Bin);
 
 my %opt     = ();
-GetOptions(\%opt, 'port|p=s', 'interface|i=s', 'domain|d=s', 'silent|s!', 'include=s@') || mexit(1);
+GetOptions(\%opt, 'port|p=s', 'interface|i=s', 'domain|d=s', 'silent|s!', 'include=s@', 'cert=s', 'key=s') || mexit(1);
 # p - port
 # i - interface (or socket file for unix domain)
 # d - domain (inet or unix or pipe)
@@ -46,6 +46,9 @@ foreach my $file (@scriptFiles) {
     mexit(1, "script file $file does not exist\n");
   }
 }
+
+my $keyFile  = $opt{key}  || $Bin . '/test.key';
+my $certFile = $opt{cert} || $Bin . '/test.crt';
 
 my $domain  = lc($opt{domain}) || 'inet';
 if ($domain !~ /^(unix|inet|pipe)$/) {
@@ -171,8 +174,8 @@ sub get_line {
 
 sub start_tls {
   $Net::SSLeay::trace = 9;
-  my $ssl_keyf  = $Bin . '/test.key';
-  my $ssl_certf = $Bin . '/test.crt';
+  my $ssl_keyf  = $keyFile;
+  my $ssl_certf = $certFile;
 
   Net::SSLeay::load_error_strings();
   Net::SSLeay::SSLeay_add_ssl_algorithms();
