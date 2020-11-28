@@ -55,6 +55,12 @@ if ($ENV{TEST_SWAKS}) {
 	}
 	$tokens->{'global'}{'%SWAKS%'} = $ENV{TEST_SWAKS};
 }
+if ($ENV{TEST_SERVER}) {
+	if ($ENV{TEST_SERVER} =~ m|[/\\]|) {
+		$ENV{TEST_SERVER} = rel2abs($ENV{TEST_SERVER});
+	}
+	$tokens->{'global'}{'%TEST_SERVER%'} = $ENV{TEST_SERVER};
+}
 
 if (!-d $testDir) {
 	die "invalid test suite (not a directory): $testDir\n";
@@ -475,6 +481,7 @@ sub runAction {
 				}
 			}
 			munge_general(\@lines, '.?', quotemeta($tokens->{'%SWAKS%'}), '%SWAKS_COMMAND%');
+			munge_general(\@lines, '.?', quotemeta($tokens->{'%TEST_SERVER%'}), '%TEST_SERVER%');
 
 			open(O, ">$file") || die "Couldn't write to $file: $!\n";
 			print O join('', @lines);
@@ -869,8 +876,8 @@ sub munge_standard {
 	my $consider = shift || '.?';
 
 	munge_globs($lines);
-	munge_dates($lines, '^(Subject|Date):');
-	munge_message_ids($lines, '^Message-Id:');
+	munge_dates($lines, '(Subject|Date):');
+	munge_message_ids($lines, 'Message-Id:');
 	munge_version($lines, 'X-Mailer');
 	munge_mime_boundaries($lines);
 	munge_paths($lines);
