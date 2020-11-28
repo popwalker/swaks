@@ -41,10 +41,24 @@ else {
   @scriptFiles = ($Bin . '/scripts/basic-successful-email.txt');
 }
 
-foreach my $file (@scriptFiles) {
+for (my $i = 0; $i < @scriptFiles; $i++) {
+  my($file, @tokens) = split(/::/, $scriptFiles[$i]);
+
   if (!-f $file) {
     mexit(1, "script file $file does not exist\n");
   }
+
+  my $info = {
+    file => $file,
+    tokens => {},
+  };
+  for (my $j = 0; $j < @tokens; $j++) {
+    my $token = $tokens[$j];
+    my $value = $tokens[++$j];
+    $value =~ s/([^\\])([\@\$\%])/$1\\$2/g; # not a huge fan of this, but since we're eval'ing this, protect perl sigils
+    $info->{tokens}{$token} = $value;
+  }
+  $scriptFiles[$i] = $info;
 }
 
 my $keyFile  = $opt{key}  || $Bin . '/test.key';
@@ -72,13 +86,17 @@ exit;
 
 sub handle_script_file {
   my $f = shift;
-  print "Run script file $f\n" if (!$opt{silent});
-  open(my $fh, "<$f") || die "Can't open $f: $!\n";
+  print "Run script file $f->{file}\n" if (!$opt{silent});
+  open(my $fh, "<$f->{file}") || die "Can't open $f->{file}: $!\n";
   while (defined(my $l = <$fh>)) {
     if ($l =~ /^include\(['"](?:\$Bin\/)?(.*)['"]\);/) {
       handle_script_file($Bin . '/' . $1);
     }
     else {
+      foreach my $token (keys %{$f->{tokens}}) {
+        $l =~ s|\.\.$token\.\.|$f->{tokens}{$token}|g
+      }
+
       eval($l);
       if ($@) {
         chomp($@);
