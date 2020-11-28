@@ -1,0 +1,12 @@
+accept::blackhole:
+accept1::blackhole:
+accept2::blackhole:
+accept3::blackhole:
+fail::fail:invalid user
+fail1::fail:invalid user
+fail2::fail:invalid user
+fail3::fail:invalid user
+defer::defer:deferred user
+defer1::defer:deferred user
+defer2::defer:deferred user
+defer3::defer:deferred user

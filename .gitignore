@@ -24,6 +24,8 @@ Thumbs.db
 *.key
 *.crt
 
+testing/mta/*-install
+
 # sublime project files
 *.sublime-project
 *.sublime-workspace
