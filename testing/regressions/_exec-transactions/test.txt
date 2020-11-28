@@ -9,11 +9,23 @@
     0 happy path
 
 00500 - prdr
-    0 happy path
+    0 happy path - 3 addrs, 3 accepts
+    1 accept accept   fail (all fails post-PRDR)
+    2 accept   fail accept (all fails post-PRDR)
+    3 accept   fail   fail (all fails post-PRDR)
+    4   fail accept accept (all fails post-PRDR)
+    5   fail accept   fail (all fails post-PRDR)
+    6   fail   fail accept (all fails post-PRDR)
+    7   fail   fail   fail (all fails post-PRDR)
+   10 accept   fail        (fail is in rcpt)     (message downscales to non-PRDR if only one accepted recipient)
+   11 accept                                     (message downscales to non-PRDR if only one accepted recipient)
+   12   fail                                     (message downscales to non-PRDR if no accepted recipients)
+   13 accept   fail accept (fail is in rcpt)     (note the rcpt-failed address isn't shown at all for prdr)
+   14 fail-prdr   fail-rcpt  accept
+
 
 00600 - auth
     0 happy path
-
 
 ../
 
