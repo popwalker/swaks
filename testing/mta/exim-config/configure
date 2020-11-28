@@ -386,7 +386,7 @@ acl_check_rcpt:
 
   # Deny unless the sender address can be verified.
 
-  require verify        = sender
+  #require verify        = sender
 
   # Accept if the message comes from one of the hosts for which we are an
   # outgoing relay. It is assumed that such hosts are most likely to be MUAs,
@@ -481,6 +481,9 @@ acl_check_rcpt:
   # At this point, the address has passed all the checks that have been
   # configured, so we accept it unconditionally.
 
+  warn local_parts   = ^data-fail
+       set acl_m_fail_message = TRUE
+
   accept
 
 
@@ -500,6 +503,9 @@ acl_check_prdr:
   # deny      set acl_m_content_filter = ${lookup PER_RCPT_CONTENT_FILTER}
   #           condition    = ...
   #############################################################################
+
+  deny message = Forced post-PRDR failure by localpart
+       local_parts   = ^prdr-fail
 
   accept
 .endif
@@ -554,6 +560,9 @@ acl_check_data:
   # deny      set acl_m_content_filter = ${lookup PER_RCPT_CONTENT_FILTER}
   #           condition    = ...
   #############################################################################
+
+  deny message = Forced post-DATA failure by localpart
+       condition = ${if def:acl_m_fail_message}
 
 
   # Accept the message.
