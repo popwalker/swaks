@@ -1,0 +1,30 @@
+
+00000 - basic send
+    0 happy path
+
+00200 - tls
+    0 happy path
+
+00300 - xclient
+    0 happy path
+
+00500 - prdr
+    0 happy path
+
+00600 - auth
+    0 happy path
+
+
+../
+
+part-0000-connect
+part-0100-helo
+part-0200-tls
+part-0300-xclient
+part-0400-pipelining
+part-0500-prdr
+part-0600-auth
+part-1000-mail
+part-1100-rcpt
+part-2500-data
+part-3000-shutdown
