@@ -10,10 +10,10 @@ test action: CMD_CAPTURE %SWAKS% --to user1@host1.nodns.test.swaks.net,user2@hos
   %TESTDIR%/part-1100-rcpt-basic-accept.txt \
   %TESTDIR%/part-1101-rcpt-basic-reject.txt \
   %TESTDIR%/part-1100-rcpt-basic-accept.txt \
-  %TESTDIR%/part-2500-data-read.txt \
+  %TESTDIR%/part-2502-data-read.txt \
   %TESTDIR%/part-0500-prdr-start.txt \
   %TESTDIR%/part-0501-prdr-addr-accept.txt::ADDR::user1@host1.nodns.test.swaks.net \
   %TESTDIR%/part-0501-prdr-addr-accept.txt::ADDR::user3@host1.nodns.test.swaks.net \
-  %TESTDIR%/part-2500-data-accept.txt \
+  %TESTDIR%/part-2501-data-accept.txt \
   %TESTDIR%/part-3000-shutdown-accept.txt \
   '
