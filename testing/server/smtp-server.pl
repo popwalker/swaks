@@ -85,16 +85,20 @@ foreach my $scriptFile (@scriptFiles) {
 exit;
 
 sub handle_script_file {
-  my $f = shift;
-  print "Run script file $f->{file}\n" if (!$opt{silent});
-  open(my $fh, "<$f->{file}") || die "Can't open $f->{file}: $!\n";
+  my $args = shift;
+  my $file = ref($args) ? $args->{file} : $args;
+
+  print "Run script file $file\n" if (!$opt{silent});
+  open(my $fh, "<$file") || die "Can't open $file: $!\n";
   while (defined(my $l = <$fh>)) {
     if ($l =~ /^include\(['"](?:\$Bin\/)?(.*)['"]\);/) {
       handle_script_file($Bin . '/' . $1);
     }
     else {
-      foreach my $token (keys %{$f->{tokens}}) {
-        $l =~ s|\.\.$token\.\.|$f->{tokens}{$token}|g
+      if (ref($args)) {
+        foreach my $token (keys %{$args->{tokens}}) {
+          $l =~ s|\.\.$token\.\.|$args->{tokens}{$token}|g
+        }
       }
 
       eval($l);
