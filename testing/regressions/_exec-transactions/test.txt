@@ -1,6 +1,10 @@
 
 00000 - basic send
     0 happy path
+    1 RCPT single recip (failed)
+    2 RCPT multiple recips (success)
+    3 RCPT multiple recips (mixed success)
+    4 RCPT multiple recips (all failed)
 
 00200 - tls
     0 happy path
