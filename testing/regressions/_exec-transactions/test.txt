@@ -5,6 +5,8 @@
     2 RCPT multiple recips (success)
     3 RCPT multiple recips (mixed success)
     4 RCPT multiple recips (all failed)
+   10 MAIL rejected
+
 
 00200 - tls
     0 happy path
