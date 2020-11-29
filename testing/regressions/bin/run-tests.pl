@@ -870,6 +870,12 @@ sub munge_open2_failure {
 	munge_general($lines, 'open2: exec of', 'line \d+', 'line ###');
 }
 
+sub munge_tls_cipher {
+	my $lines = shift;
+
+	munge_general($lines, 'TLS started with cipher', 'TLS started with cipher .*', 'TLS started with cipher VERSION:CIPHER:BITS');
+}
+
 # this is just a convenience so I can add new munges without having to manually apply them to all test files
 sub munge_standard {
 	my $lines    = shift;
@@ -886,4 +892,5 @@ sub munge_standard {
 	munge_copyright($lines);
 	munge_tls_available_protocols($lines);
 	munge_open2_failure($lines);
+	munge_tls_cipher($lines);
 }

@@ -17,7 +17,7 @@
 <-  250 HELP
  -> STARTTLS
 <-  220 TLS go ahead
-=== TLS started with cipher TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256
+=== TLS started with cipher VERSION:CIPHER:BITS
 === TLS no local certificate set
 === TLS peer DN="/CN=node.example.com"
  ~> EHLO hserver
